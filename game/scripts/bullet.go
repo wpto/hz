@@ -27,9 +27,12 @@ func NewBullet(x, y float64, dx, dy float64) *Bullet {
 	}
 }
 
+func (b *Bullet) PhysicsUpdate(dt float64) {
+	b.x += b.dx * b.speed * dt
+	b.y += b.dy * b.speed * dt
+}
+
 func (b *Bullet) Update() {
-	b.x += b.dx * b.speed * core.Delta
-	b.y += b.dy * b.speed * core.Delta
 	b.sprite.SetPosition(b.x, b.y)
 	b.sprite.SetRotation(util.V2Angle(b.dx, b.dy))
 	b.sprite.Update()

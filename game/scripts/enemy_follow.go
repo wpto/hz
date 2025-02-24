@@ -1,13 +1,12 @@
 package scripts
 
 import (
-	"hz/game/core"
 	"hz/game/util"
 )
 
 // var rotationSpeed = util.DegToRad(360 * 3) // per second
 
-func EnemyFollowTarget(e *Enemy, target EnemyTarget) {
+func EnemyFollowTargetUpdatePhysics(dt float64, e *Enemy, target EnemyTarget) {
 	if util.V2Len(target.Walk.X-e.x, target.Walk.Y-e.y) < target.Radius {
 		return
 	}
@@ -29,5 +28,5 @@ func EnemyFollowTarget(e *Enemy, target EnemyTarget) {
 
 	e.SetLookDirection(target.Look)
 
-	e.SetPosition(e.x+dx*e.speed*core.Delta, e.y+dy*e.speed*core.Delta)
+	e.SetPosition(e.x+dx*e.speed*dt, e.y+dy*e.speed*dt)
 }

@@ -50,10 +50,15 @@ func (em *EnemyManager) Update() {
 	}
 
 	for _, e := range em.Enemies {
-		if em.target.Active {
-			EnemyFollowTarget(e, em.target)
-		}
 		e.Update()
+	}
+}
+
+func (em *EnemyManager) PhysicsUpdate(dt float64) {
+	for _, e := range em.Enemies {
+		if em.target.Active {
+			EnemyFollowTargetUpdatePhysics(dt, e, em.target)
+		}
 	}
 }
 

@@ -1,13 +1,35 @@
 package scripts
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"fmt"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type BulletManager struct {
 	Bullets []*Bullet
+
+	Physics *Physics
 }
 
-func NewBulletManager() *BulletManager {
-	return &BulletManager{}
+func NewBulletManager(ph *Physics) *BulletManager {
+	return &BulletManager{
+		Physics: ph,
+	}
+}
+
+func (bm *BulletManager) PhysicsUpdate(dt float64) {
+	for _, b := range bm.Bullets {
+		px, py := b.x, b.y
+		b.PhysicsUpdate(dt)
+		x, y := b.x, b.y
+
+		collide := bm.Physics.CheckLine(px, py, x, y)
+		if collide {
+			fmt.Println("Bullet collide")
+		}
+	}
+
 }
 
 func (bm *BulletManager) Update() {

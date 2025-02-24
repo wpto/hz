@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"hz/game/core"
+	"hz/game/util"
 	"hz/resources/images"
 	"image/color"
 	"math"
@@ -15,12 +16,15 @@ const (
 )
 
 type Player struct {
-	prevx, prevy       float64
-	X, Y               float64
+	prevx, prevy float64
+	X, Y         float64
+
 	ChelBody, ChelLegs *core.AnimatedSprite
 
 	crosshairX, crosshairY float64
 	crosshairDirection     float64
+
+	movingVelocity util.Vec2
 
 	physics *Physics
 	id      int
@@ -40,7 +44,7 @@ func NewPlayer(p *Physics) *Player {
 	return player
 }
 
-func (p *Player) UpdateControl() {
+func (p *Player) Input() {
 	var dx, dy float64
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		dy--
@@ -60,9 +64,7 @@ func (p *Player) UpdateControl() {
 		dy *= math.Sqrt(2) / 2
 	}
 
-	p.prevx, p.prevy = p.X, p.Y
-	p.X += dx * speed * core.Delta
-	p.Y += dy * speed * core.Delta
+	p.movingVelocity = util.NewVec2(dx, dy).Mul(speed)
 }
 
 func (p *Player) UpdateCrosshair() {
@@ -93,8 +95,13 @@ func (p *Player) GetAnimationSpeed() float64 {
 	return p.GetVelocitySqr() / baseAnimationSpeed / baseAnimationSpeed
 }
 
+func (p *Player) PhysicsUpdate(dt float64) {
+	p.prevx, p.prevy = p.X, p.Y
+	p.X += p.movingVelocity.X * dt
+	p.Y += p.movingVelocity.Y * dt
+}
+
 func (p *Player) Update() error {
-	p.UpdateControl()
 	p.UpdateCrosshair()
 	p.physics.UpdateCircle(p.id, p.X, p.Y, 10)
 

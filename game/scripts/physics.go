@@ -2,7 +2,6 @@ package scripts
 
 import (
 	"hz/game/core"
-	"hz/game/util"
 	"image/color"
 	"math"
 
@@ -26,12 +25,20 @@ type PhysicsCircle struct {
 type PhysicsShape interface {
 }
 
+type PhysicsUpdate interface {
+	PhysicsUpdate(dt float64)
+}
+
 type Physics struct {
 	Rects         map[int]PhysicsRect
 	Circles       map[int]PhysicsCircle
 	CircleUpdater map[int]PhysicsUpdater
 	grid          map[int]map[int]map[int]struct{}
 	cellSize      int
+
+	Updaters []PhysicsUpdate
+
+	counter int
 }
 
 func NewPhysics() *Physics {
@@ -40,17 +47,26 @@ func NewPhysics() *Physics {
 		Circles:       make(map[int]PhysicsCircle),
 		CircleUpdater: make(map[int]PhysicsUpdater),
 		grid:          make(map[int]map[int]map[int]struct{}),
-		cellSize:      32,
+		cellSize:      20,
+		counter:       0,
 	}
+}
+
+func (p *Physics) AddPhysicsUpdater(updater PhysicsUpdate) {
+	p.Updaters = append(p.Updaters, updater)
 }
 
 func (p *Physics) GetCell(x, y float64) (int, int) {
 	return int(x) / p.cellSize, int(y) / p.cellSize
 }
 
+func (p *Physics) GetCellUpper(x, y float64) (int, int) {
+	return int(math.Ceil(x / float64(p.cellSize))), int(math.Ceil(y / float64(p.cellSize)))
+}
+
 func (p *Physics) MarkCellRect(x, y, w, h float64, id int) {
 	i1, j1 := p.GetCell(x, y)
-	i2, j2 := p.GetCell(x+w, y+h)
+	i2, j2 := p.GetCellUpper(x+w, y+h)
 	for i := i1; i <= i2; i++ {
 		for j := j1; j <= j2; j++ {
 			if p.grid[i] == nil {
@@ -67,7 +83,7 @@ func (p *Physics) MarkCellRect(x, y, w, h float64, id int) {
 
 func (p *Physics) UnmarkCellRect(x, y, w, h float64, id int) {
 	i1, j1 := p.GetCell(x, y)
-	i2, j2 := p.GetCell(x+w, y+h)
+	i2, j2 := p.GetCellUpper(x+w, y+h)
 	for i := i1; i <= i2; i++ {
 		for j := j1; j <= j2; j++ {
 			delete(p.grid[i][j], id)
@@ -76,7 +92,8 @@ func (p *Physics) UnmarkCellRect(x, y, w, h float64, id int) {
 }
 
 func (p *Physics) AddRect(x, y, w, h float64) int {
-	id := len(p.Rects)
+	id := p.counter
+	p.counter++
 	p.Rects[id] = PhysicsRect{ID: id, X: x, Y: y, Width: w, Height: h}
 	p.MarkCellRect(x, y, w, h, id)
 	return id
@@ -89,7 +106,8 @@ func (p *Physics) UpdateRect(id int, x, y, w, h float64) {
 }
 
 func (p *Physics) AddCircle(x, y, r float64, updater PhysicsUpdater) int {
-	id := len(p.Circles)
+	id := p.counter
+	p.counter++
 	p.Circles[id] = PhysicsCircle{ID: id, X: x, Y: y, Radius: r}
 	p.CircleUpdater[id] = updater
 	p.MarkCellRect(x-r, y-r, x+r, y+r, id)
@@ -129,11 +147,26 @@ func (p *Physics) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+
+	for _, rect := range p.Rects {
+		for i := 0; i < int(rect.Width); i++ {
+			for j := 0; j < int(rect.Height); j++ {
+				x, y := core.GlobalCamera.WorldToCamera(rect.X+float64(i), rect.Y+float64(j))
+				screen.Set(int(x), int(y), color.RGBA{0, 128, 0, 128})
+			}
+		}
+	}
 }
 
+const substeps = 8
+
 func (p *Physics) Update() {
+	const subdt = core.Delta / substeps
 	for i := 0; i < 8; i++ {
 		p.UpdateIteration()
+		for _, updater := range p.Updaters {
+			updater.PhysicsUpdate(subdt)
+		}
 	}
 }
 
@@ -152,11 +185,32 @@ func (p *Physics) UpdateIteration() {
 						continue
 					}
 
-					other := p.Circles[id]
-					if isCirclesCollide(circ, other) {
-						solveCircleCollision(&circ, &other)
-						p.CircleUpdater[circ.ID].SetPosition(circ.X, circ.Y)
-						p.CircleUpdater[other.ID].SetPosition(other.X, other.Y)
+					useCircle := true
+					otherCircle, ok := p.Circles[id]
+					if !ok {
+						useCircle = false
+
+					}
+
+					if useCircle {
+						if isCirclesCollide(circ, otherCircle) {
+							solveCircleCollision(&circ, &otherCircle)
+							p.CircleUpdater[circ.ID].SetPosition(circ.X, circ.Y)
+							p.CircleUpdater[otherCircle.ID].SetPosition(otherCircle.X, otherCircle.Y)
+						}
+					}
+
+					useRect := true
+					otherRect, ok := p.Rects[id]
+					if !ok {
+						useRect = false
+					}
+
+					if useRect {
+						if isCircleRectangleCollision(circ, otherRect) {
+							solveCircleRectCollision(&circ, &otherRect)
+							p.CircleUpdater[circ.ID].SetPosition(circ.X, circ.Y)
+						}
 					}
 				}
 			}
@@ -167,29 +221,67 @@ func (p *Physics) UpdateIteration() {
 func isCirclesCollide(c1, c2 PhysicsCircle) bool {
 	dx := c1.X - c2.X
 	dy := c1.Y - c2.Y
-	dist := math.Sqrt(dx*dx + dy*dy)
-	return dist < c1.Radius+c2.Radius
+	r := c1.Radius + c2.Radius
+	return dx*dx+dy*dy <= r*r
+}
+
+// Проверяет пересечение окружности и прямоугольника
+func isCircleRectangleCollision(c1 PhysicsCircle, r1 PhysicsRect) bool {
+	// Находим ближайшую точку прямоугольника к центру окружности
+	nearestX := math.Max(r1.X, math.Min(c1.X, r1.X+r1.Width))
+	nearestY := math.Max(r1.Y, math.Min(c1.Y, r1.Y+r1.Height))
+
+	// Вычисляем расстояние от центра окружности до ближайшей точки
+	dx := c1.X - nearestX
+	dy := c1.Y - nearestY
+
+	distanceSquared := dx*dx + dy*dy
+
+	return distanceSquared < (c1.Radius * c1.Radius)
 }
 
 func solveCircleCollision(c1, c2 *PhysicsCircle) {
 	dx := c1.X - c2.X
 	dy := c1.Y - c2.Y
 	dist := math.Sqrt(dx*dx + dy*dy)
-	if dist <= .1 {
+	minDist := c1.Radius + c2.Radius
 
+	if dist > minDist {
+		return
 	}
 
-	// Нормализация вектора
-	dx /= dist
-	dy /= dist
+	if dist == 0 {
+		dx, dy = 1, 0
+		dist = minDist
+	}
 
-	// Перемещение кругов
+	delta := (minDist - dist) / 2
+	nx, ny := dx/dist, dy/dist
 
-	cdx, cdy := util.NewVec2(dx, dy).Mul(c1.Radius - dist/2).Values()
-	c1.X += cdx
-	c1.Y += cdy
+	c1.X += nx * delta
+	c1.Y += ny * delta
+	c2.X -= nx * delta
+	c2.Y -= ny * delta
 
-	cdx, cdy = util.NewVec2(dx, dy).Mul(c2.Radius - dist/2).Values()
-	c2.X -= cdx
-	c2.Y -= cdy
+	// newDist := math.Sqrt((c1.X-c2.X)*(c1.X-c2.X) + (c1.Y-c2.Y)*(c1.Y-c2.Y))
+	// if newDist+0.001 < minDist {
+	// 	log.Panic("collision not resolved")
+	// }
+}
+
+func solveCircleRectCollision(c1 *PhysicsCircle, r1 *PhysicsRect) {
+	// Находим ближайшую точку прямоугольника к центру окружности
+	nearestX := math.Max(r1.X, math.Min(c1.X, r1.X+r1.Width))
+	nearestY := math.Max(r1.Y, math.Min(c1.Y, r1.Y+r1.Height))
+	// Вычисляем расстояние от центра окружности до ближайшей точки
+	dx := c1.X - nearestX
+	dy := c1.Y - nearestY
+
+	distanceSquared := math.Sqrt(dx*dx + dy*dy)
+	minDist := c1.Radius
+
+	delta := (minDist - distanceSquared)
+
+	c1.X += dx * delta
+	c1.Y += dy * delta
 }

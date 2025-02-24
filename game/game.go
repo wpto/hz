@@ -29,7 +29,9 @@ func NewGame() *Game {
 	ph := scripts.NewPhysics()
 	p := scripts.NewPlayer(ph)
 	em := scripts.NewEnemyManager(ph)
-	bm := scripts.NewBulletManager()
+	ph.AddPhysicsUpdater(p)
+	ph.AddPhysicsUpdater(em)
+	bm := scripts.NewBulletManager(ph)
 	po := scripts.NewPlayerObserver(p, em)
 	return &Game{
 		Level:          scripts.NewLevel(ph),
@@ -43,13 +45,16 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
+
+	g.Player.Input()
+
 	g.Level.Update()
 	g.Weapon.Update()
-	g.Player.Update()
 	g.PlayerObserver.Update()
 	g.EnemyManager.Update()
 	g.BulletMananger.Update()
 	g.Physics.Update()
+	g.Player.Update()
 
 	return nil
 }
@@ -59,7 +64,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.Player.Draw(screen)
 	g.EnemyManager.Draw(screen)
 	g.BulletMananger.Draw(screen)
-	// g.Physics.Draw(screen)
+	g.Physics.Draw(screen)
 
 	x, y := ebiten.CursorPosition()
 	mx, my := core.GlobalCamera.ScreenToWorld(float64(x), float64(y))
