@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"fmt"
+	"hz/game/scripts/physics"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -9,10 +10,10 @@ import (
 type BulletManager struct {
 	Bullets []*Bullet
 
-	Physics *Physics
+	Physics *physics.Physics
 }
 
-func NewBulletManager(ph *Physics) *BulletManager {
+func NewBulletManager(ph *physics.Physics) *BulletManager {
 	return &BulletManager{
 		Physics: ph,
 	}

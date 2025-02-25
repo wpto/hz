@@ -1,4 +1,4 @@
-package scripts
+package physics
 
 import (
 	"math"

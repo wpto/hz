@@ -1,4 +1,4 @@
-package scripts
+package physics
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ func TestSolveCircleCollission(t *testing.T) {
 	}
 
 	for _, tc := range c {
-		c1 := &PhysicsCircle{ID: 1, X: tc.x1, Y: tc.y1, Radius: tc.c1}
-		c2 := &PhysicsCircle{ID: 2, X: tc.x2, Y: tc.y2, Radius: tc.c2}
+		c1 := &CircleShape{X: tc.x1, Y: tc.y1, Radius: tc.c1}
+		c2 := &CircleShape{X: tc.x2, Y: tc.y2, Radius: tc.c2}
 
 		solveCircleCollision(c1, c2)
 		fmt.Println(c1, c2)

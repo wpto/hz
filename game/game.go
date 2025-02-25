@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hz/game/core"
 	"hz/game/scripts"
+	"hz/game/scripts/physics"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -22,15 +23,13 @@ type Game struct {
 	BulletMananger *scripts.BulletManager
 	Weapon         *scripts.Weapon
 
-	Physics *scripts.Physics
+	Physics *physics.Physics
 }
 
 func NewGame() *Game {
-	ph := scripts.NewPhysics()
+	ph := physics.NewPhysics()
 	p := scripts.NewPlayer(ph)
 	em := scripts.NewEnemyManager(ph)
-	ph.AddPhysicsUpdater(p)
-	ph.AddPhysicsUpdater(em)
 	bm := scripts.NewBulletManager(ph)
 	po := scripts.NewPlayerObserver(p, em)
 	return &Game{

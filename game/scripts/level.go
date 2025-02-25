@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"hz/game/core"
+	"hz/game/scripts/physics"
 	"hz/resources/images"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -9,11 +10,11 @@ import (
 
 type Level struct {
 	Room  *core.Sprite
-	Walls []PhysicsRect
+	Walls []physics.RectShape
 }
 
-func NewLevel(ph *Physics) *Level {
-	walls := []PhysicsRect{
+func NewLevel(ph *physics.Physics) *Level {
+	walls := []physics.RectShape{
 		{X: 0, Y: 0, Width: 288, Height: 8},
 		{X: 0, Y: 0, Width: 8, Height: 288},
 		// {X: 288 - 8, Y: 0, Width: 8, Height: 288},
@@ -25,8 +26,8 @@ func NewLevel(ph *Physics) *Level {
 		{X: 288 - 8, Y: 88, Width: 8, Height: 200},
 	}
 
-	for _, wall := range walls {
-		ph.AddRect(wall.X, wall.Y, wall.Width, wall.Height)
+	for i, wall := range walls {
+		ph.AddShape(wall, &walls[i])
 	}
 
 	room := core.NewSprite(images.Room1)

@@ -2,6 +2,7 @@ package scripts
 
 import (
 	"hz/game/core"
+	"hz/game/scripts/physics"
 	"hz/game/util"
 	"hz/resources/images"
 	"image/color"
@@ -26,11 +27,11 @@ type Player struct {
 
 	movingVelocity util.Vec2
 
-	physics *Physics
+	physics *physics.Physics
 	id      int
 }
 
-func NewPlayer(p *Physics) *Player {
+func NewPlayer(p *physics.Physics) *Player {
 	player := &Player{
 		X:        0,
 		Y:        0,
@@ -38,8 +39,8 @@ func NewPlayer(p *Physics) *Player {
 		ChelLegs: core.NewAnimatedSprite(images.Chel, "legs", 0.5),
 		physics:  p,
 	}
-	id := p.AddCircle(0, 0, 10, player)
-	player.id = id
+
+	player.id = p.AddShape(physics.CircleShape{X: 0, Y: 0, Radius: 10}, player)
 
 	return player
 }
@@ -95,15 +96,21 @@ func (p *Player) GetAnimationSpeed() float64 {
 	return p.GetVelocitySqr() / baseAnimationSpeed / baseAnimationSpeed
 }
 
+func (p *Player) PhysicsBackwardPush(shape physics.Shape) {
+	if cirlce, ok := shape.(physics.CircleShape); ok {
+		p.X, p.Y = cirlce.X, cirlce.Y
+	}
+}
+
 func (p *Player) PhysicsUpdate(dt float64) {
 	p.prevx, p.prevy = p.X, p.Y
 	p.X += p.movingVelocity.X * dt
 	p.Y += p.movingVelocity.Y * dt
+	p.physics.ForwardPush(p.id, physics.CircleShape{X: p.X, Y: p.Y, Radius: 10})
 }
 
 func (p *Player) Update() error {
 	p.UpdateCrosshair()
-	p.physics.UpdateCircle(p.id, p.X, p.Y, 10)
 
 	animationSpeed := p.GetAnimationSpeed()
 

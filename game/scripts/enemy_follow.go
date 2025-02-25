@@ -6,7 +6,7 @@ import (
 
 // var rotationSpeed = util.DegToRad(360 * 3) // per second
 
-func EnemyFollowTargetUpdatePhysics(dt float64, e *Enemy, target EnemyTarget) {
+func EnemyFollowTarget(dt float64, e *Enemy, target EnemyTarget) {
 	if util.V2Len(target.Walk.X-e.x, target.Walk.Y-e.y) < target.Radius {
 		return
 	}

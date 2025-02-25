@@ -37,6 +37,18 @@ var EnemyZombie Image
 var bullet []byte
 var Bullet Image
 
+//go:embed DebugLine.png
+var debugLine []byte
+var DebugLine Image
+
+//go:embed DebugCircle.png
+var debugCircle []byte
+var DebugCircle Image
+
+//go:embed DebugRect.png
+var debugRect []byte
+var DebugRect Image
+
 func InitImage(name string, file []byte, width, height int, layers map[string]LayerOffset) Image {
 	img, _, err := image.Decode(bytes.NewReader(file))
 	if err != nil {
@@ -63,4 +75,8 @@ func init() {
 
 	EnemyZombie = InitImage("enemyZombie", enemyZombie, 12, 24, nil)
 	Bullet = InitImage("bullet", bullet, 32, 32, nil)
+
+	DebugLine = InitImage("debugLine", debugLine, 32, 32, nil)
+	DebugCircle = InitImage("debugCircle", debugCircle, 32, 32, nil)
+	DebugRect = InitImage("debugRect", debugRect, 32, 32, nil)
 }

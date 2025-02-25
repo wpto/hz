@@ -1,4 +1,4 @@
-package scripts
+package physics
 
 // Функция проверки пересечения отрезка с прямоугольником
 func isIntersectingSegmentRectangle(x1, y1, x2, y2, xmin, ymin, xmax, ymax float64) bool {

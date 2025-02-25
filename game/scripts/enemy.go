@@ -1,7 +1,9 @@
 package scripts
 
 import (
+	"fmt"
 	"hz/game/core"
+	"hz/game/scripts/physics"
 	"hz/game/util"
 	"hz/resources/images"
 	"math"
@@ -18,11 +20,13 @@ type Enemy struct {
 
 	lookDirection float64
 
-	physics *Physics
+	target EnemyTarget
+
+	physics *physics.Physics
 	id      int
 }
 
-func NewEnemy(p *Physics, pos util.Vec2) *Enemy {
+func NewEnemy(p *physics.Physics, pos util.Vec2) *Enemy {
 	enemy := &Enemy{
 		x:       pos.X,
 		y:       pos.Y,
@@ -34,8 +38,8 @@ func NewEnemy(p *Physics, pos util.Vec2) *Enemy {
 		physics: p,
 	}
 
-	id := p.AddCircle(0, 0, 10, enemy)
-	enemy.id = id
+	// id := p.AddCircle(0, 0, 10, enemy)
+	enemy.id = p.AddShape(physics.CircleShape{X: 0, Y: 0, Radius: 10}, enemy)
 
 	return enemy
 }
@@ -53,10 +57,21 @@ func (e *Enemy) GetAnimationSpeed() float64 {
 	return ((e.x-e.prevx)*(e.x-e.prevx) + (e.y-e.prevy)*(e.y-e.prevy)) / (e.speed) / e.speed / core.Delta / core.Delta
 }
 
+func (e *Enemy) PhysicsBackwardPush(shape physics.Shape) {
+	if sh, ok := shape.(physics.CircleShape); ok {
+		e.x, e.y = sh.X, sh.Y
+	}
+}
+
+func (e *Enemy) PhysicsUpdate(dt float64) {
+	if e.target.Active {
+		EnemyFollowTarget(dt, e, e.target)
+		e.physics.ForwardPush(e.id, physics.CircleShape{X: e.x, Y: e.y, Radius: 10})
+	}
+}
+
 func (e *Enemy) Update() {
-
-	e.physics.UpdateCircle(e.id, e.x, e.y, 10)
-
+	fmt.Println("enemy position", e.x, e.y)
 	e.body.SetPosition(e.x, e.y)
 	e.body.SetRotation(e.lookDirection)
 	e.body.Update()
