@@ -44,3 +44,8 @@ func (m CircleShape) Draw(screen *ebiten.Image) {
 
 	screen.DrawImage(images.DebugCircle.Image, op)
 }
+
+func (m CircleShape) Move(dx, dy float64) {
+	m.X += dx
+	m.Y += dy
+}

@@ -126,7 +126,7 @@ func (p *Physics) Update() {
 		}
 
 		fmt.Println("Collision check")
-		p.UpdateIteration()
+		p.UpdateIteration(0.5)
 		fmt.Println("Collision done")
 
 		for id := range p.shapes {
@@ -138,7 +138,31 @@ func (p *Physics) Update() {
 	}
 }
 
-func (p *Physics) UpdateIteration() {
+func (p *Physics) MoveAndCollide(id int, dx, dy float64) {
+	lower, upper := p.shapes[id].shape.CellBounds(p)
+
+	newShape := p.shapes[id].shape
+	newShape
+	for i := lower.i; i <= upper.i; i++ {
+		if p.grid[i] == nil {
+			continue
+		}
+
+		for j := lower.j; j <= lower.j; j++ {
+			for otherID := range p.grid[i][j] {
+				if id == otherID {
+					continue
+				}
+
+				// if isIntersectingCircleCircle(p.Circles[id], p.Circles[otherID]) {
+				// 	solveCircleCollision(&p.Circles[id], &p.Circles[otherID])
+				// }
+			}
+		}
+	}
+}
+
+func (p *Physics) UpdateIteration(portion float64) {
 	for _, sh := range p.shapes {
 		lower, upper := sh.shape.CellBounds(p)
 
@@ -161,7 +185,7 @@ func (p *Physics) UpdateIteration() {
 							if isCirclesCollide(s1, s2) {
 								p.UnmarkShape(sh.id, sh.shape)
 								p.UnmarkShape(otherShape.id, otherShape.shape)
-								solveCircleCollision(&s1, &s2)
+								solveCircleCollision(&s1, &s2, portion)
 								p.shapes[sh.id] = shape{
 									id:    sh.id,
 									shape: s1,
@@ -179,7 +203,7 @@ func (p *Physics) UpdateIteration() {
 							if isCircleRectangleCollision(s1, s2) {
 								p.UnmarkShape(sh.id, sh.shape)
 								p.UnmarkShape(otherShape.id, otherShape.shape)
-								solveCircleRectCollision(&s1, &s2)
+								solveCircleRectCollision(&s1, &s2, portion)
 								p.shapes[sh.id] = shape{
 									id:    sh.id,
 									shape: s1,
@@ -200,7 +224,7 @@ func (p *Physics) UpdateIteration() {
 							if isCircleRectangleCollision(s2, s1) {
 								p.UnmarkShape(sh.id, sh.shape)
 								p.UnmarkShape(otherShape.id, otherShape.shape)
-								solveCircleRectCollision(&s2, &s1)
+								solveCircleRectCollision(&s2, &s1, portion)
 								p.shapes[sh.id] = shape{
 									id:    sh.id,
 									shape: s1,
@@ -245,7 +269,7 @@ func isCircleRectangleCollision(c1 CircleShape, r1 RectShape) bool {
 	return distanceSquared < (c1.Radius * c1.Radius)
 }
 
-func solveCircleCollision(c1, c2 *CircleShape) {
+func solveCircleCollision(c1, c2 *CircleShape, portion float64) {
 	dx := c1.X - c2.X
 	dy := c1.Y - c2.Y
 	dist := math.Sqrt(dx*dx + dy*dy)
@@ -263,10 +287,10 @@ func solveCircleCollision(c1, c2 *CircleShape) {
 	delta := (minDist - dist) / 2
 	nx, ny := dx/dist, dy/dist
 
-	c1.X += nx * delta
-	c1.Y += ny * delta
-	c2.X -= nx * delta
-	c2.Y -= ny * delta
+	c1.X += nx * delta * portion
+	c1.Y += ny * delta * portion
+	c2.X -= nx * delta * portion
+	c2.Y -= ny * delta * portion
 
 	// newDist := math.Sqrt((c1.X-c2.X)*(c1.X-c2.X) + (c1.Y-c2.Y)*(c1.Y-c2.Y))
 	// if newDist+0.001 < minDist {
@@ -274,7 +298,7 @@ func solveCircleCollision(c1, c2 *CircleShape) {
 	// }
 }
 
-func solveCircleRectCollision(c1 *CircleShape, r1 *RectShape) {
+func solveCircleRectCollision(c1 *CircleShape, r1 *RectShape, portion float64) {
 	// Находим ближайшую точку прямоугольника к центру окружности
 	nearestX := math.Max(r1.X, math.Min(c1.X, r1.X+r1.Width))
 	nearestY := math.Max(r1.Y, math.Min(c1.Y, r1.Y+r1.Height))
@@ -303,6 +327,6 @@ func solveCircleRectCollision(c1 *CircleShape, r1 *RectShape) {
 	}
 
 	// Перемещение окружности на границу столкновения
-	c1.X += (dx / dist) * pushDist
-	c1.Y += (dy / dist) * pushDist
+	c1.X += (dx / dist) * pushDist * portion
+	c1.Y += (dy / dist) * pushDist * portion
 }
