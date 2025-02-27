@@ -65,8 +65,7 @@ func (e *Enemy) PhysicsBackwardPush(shape physics.Shape) {
 
 func (e *Enemy) PhysicsUpdate(dt float64) {
 	if e.target.Active {
-		EnemyFollowTarget(dt, e, e.target)
-		e.physics.ForwardPush(e.id, physics.CircleShape{X: e.x, Y: e.y, Radius: 10})
+		EnemyFollowTarget(e.physics, dt, e, e.target)
 	}
 }
 

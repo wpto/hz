@@ -44,9 +44,10 @@ func (m LineShape) Draw(screen *ebiten.Image) {
 	screen.DrawImage(images.DebugLine.Image, op)
 }
 
-func (m LineShape) Move(dx, dy float64) {
+func (m LineShape) Move(dx, dy float64) Shape {
 	m.X1 += dx
 	m.Y1 += dy
 	m.X2 += dx
 	m.Y2 += dy
+	return m
 }

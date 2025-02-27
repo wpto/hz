@@ -1,7 +1,6 @@
 package scripts
 
 import (
-	"fmt"
 	"hz/game/scripts/physics"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -25,12 +24,15 @@ func (bm *BulletManager) PhysicsUpdate(dt float64) {
 		b.PhysicsUpdate(dt)
 		x, y := b.x, b.y
 
-		collide := bm.Physics.CheckLine(px, py, x, y)
-		if collide {
-			fmt.Println("Bullet collide")
-		}
+		_ = px
+		_ = py
+		_ = x
+		_ = y
+		// collide := bm.Physics.CheckLine(px, py, x, y)
+		// if collide {
+		// 	fmt.Println("Bullet collide")
+		// }
 	}
-
 }
 
 func (bm *BulletManager) Update() {

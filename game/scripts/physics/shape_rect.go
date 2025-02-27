@@ -50,7 +50,8 @@ func (m RectShape) Draw(screen *ebiten.Image) {
 	screen.DrawImage(images.DebugRect.Image, op)
 }
 
-func (m RectShape) Move(dx, dy float64) {
+func (m RectShape) Move(dx, dy float64) Shape {
 	m.X += dx
 	m.Y += dy
+	return m
 }

@@ -61,6 +61,10 @@ func (v Vec2) Values() (float64, float64) {
 	return v.X, v.Y
 }
 
+func (v Vec2) Dot(v2 Vec2) float64 {
+	return v.X*v2.X + v.Y*v2.Y
+}
+
 // LerpAngle interpolates between two angles a and b by a factor t.
 func LerpAngle(a, b, t float64) float64 {
 	diff := b - a

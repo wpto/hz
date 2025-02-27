@@ -72,14 +72,6 @@ func (em *EnemyManager) Update() {
 	}
 }
 
-func (em *EnemyManager) PhysicsUpdate(dt float64) {
-	for _, e := range em.Enemies {
-		if em.target.Active {
-			EnemyFollowTarget(dt, e, em.target)
-		}
-	}
-}
-
 func (em *EnemyManager) Draw(screen *ebiten.Image) {
 	for _, e := range em.Enemies {
 		e.Draw(screen)
