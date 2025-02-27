@@ -3,7 +3,6 @@ package scripts
 import (
 	"hz/game/scripts/physics"
 	"hz/game/util"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -43,25 +42,29 @@ var spawnOnce sync.Once
 func (em *EnemyManager) Update() {
 	spawnOnce.Do(func() {
 		pos := util.NewVec2(
-			float64(100*(rand.Int31n(5)+1)),
-			float64(100*(rand.Int31n(5)+1)),
+			50, 50,
 		)
 		enemy := NewEnemy(em.physics, pos)
 		em.Enemies = append(em.Enemies, enemy)
 
+		pos = util.NewVec2(
+			100, 50,
+		)
+		enemy = NewEnemy(em.physics, pos)
+		em.Enemies = append(em.Enemies, enemy)
 	})
 
-	select {
-	case <-em.SpawnTicker.C:
-		pos := util.NewVec2(
-			float64(100*(rand.Int31n(5)+1)),
-			float64(100*(rand.Int31n(5)+1)),
-		)
-		enemy := NewEnemy(em.physics, pos)
-		em.Enemies = append(em.Enemies, enemy)
+	// select {
+	// case <-em.SpawnTicker.C:
+	// 	pos := util.NewVec2(
+	// 		float64(100*(rand.Int31n(5)+1)+50),
+	// 		float64(100*(rand.Int31n(5)+1)+50),
+	// 	)
+	// 	enemy := NewEnemy(em.physics, pos)
+	// 	em.Enemies = append(em.Enemies, enemy)
 
-	default:
-	}
+	// default:
+	// }
 
 	for _, e := range em.Enemies {
 		e.target = em.target

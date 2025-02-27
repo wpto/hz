@@ -6,14 +6,21 @@ import (
 )
 
 func isCirclesCollide(c1, c2 CircleShape) bool {
+	return isCirclesCollideThreshold(c1, c2, 0.001)
+}
+func isCirclesCollideThreshold(c1, c2 CircleShape, threshold float64) bool {
 	dx := c1.X - c2.X
 	dy := c1.Y - c2.Y
 	r := c1.Radius + c2.Radius
-	return dx*dx+dy*dy <= r*r
+	return r*r-dx*dx-dy*dy > threshold
+}
+
+func isCircleRectangleCollision(c1 CircleShape, r1 RectShape) bool {
+	return isCircleRectangleCollisionThreshold(c1, r1, 0.001)
 }
 
 // Проверяет пересечение окружности и прямоугольника
-func isCircleRectangleCollision(c1 CircleShape, r1 RectShape) bool {
+func isCircleRectangleCollisionThreshold(c1 CircleShape, r1 RectShape, threshold float64) bool {
 	// Находим ближайшую точку прямоугольника к центру окружности
 	nearestX := math.Max(r1.X, math.Min(c1.X, r1.X+r1.Width))
 	nearestY := math.Max(r1.Y, math.Min(c1.Y, r1.Y+r1.Height))
@@ -24,7 +31,7 @@ func isCircleRectangleCollision(c1 CircleShape, r1 RectShape) bool {
 
 	distanceSquared := dx*dx + dy*dy
 
-	return distanceSquared < (c1.Radius * c1.Radius)
+	return (c1.Radius*c1.Radius)-distanceSquared > threshold
 }
 
 func solveCircleCollision(c1, c2 *CircleShape) {
@@ -117,4 +124,15 @@ func normalToRect(c1 util.Vec2, r1 RectShape) util.Vec2 {
 
 	// Перемещение окружности на границу столкновения
 	return util.NewVec2((dx / dist), (dy / dist))
+}
+
+func normalToCircle(p util.Vec2, c1 CircleShape) util.Vec2 {
+	normalX := p.X - c1.X
+	normalY := p.Y - c1.Y
+	dist := math.Sqrt(normalX*normalX + normalY*normalY)
+	if dist != 0 {
+		normalX /= dist
+		normalY /= dist
+	}
+	return util.NewVec2(normalX, normalY)
 }

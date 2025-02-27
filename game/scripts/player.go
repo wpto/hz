@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	speed              = 200
+	speed              = 120
 	baseAnimationSpeed = speed * core.Delta
 )
 
@@ -33,14 +33,14 @@ type Player struct {
 
 func NewPlayer(p *physics.Physics) *Player {
 	player := &Player{
-		X:        0,
-		Y:        0,
+		X:        100,
+		Y:        100,
 		ChelBody: core.NewAnimatedSprite(images.Chel, "body", 1.0),
 		ChelLegs: core.NewAnimatedSprite(images.Chel, "legs", 0.5),
 		physics:  p,
 	}
 
-	player.id = p.AddShape(physics.CircleShape{X: 0, Y: 0, Radius: 10}, player)
+	player.id = p.AddShape(physics.CircleShape{X: player.X, Y: player.Y, Radius: 10}, player)
 
 	return player
 }

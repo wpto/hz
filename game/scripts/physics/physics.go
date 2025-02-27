@@ -51,7 +51,6 @@ func (p *Physics) GetCellUpper(x, y float64) (int, int) {
 func (p *Physics) AddShape(sh Shape, owner any) int {
 	id := p.counter
 	p.counter++
-
 	p.shapes[id] = bodyObj{
 		id:    id,
 		shape: sh,
@@ -142,16 +141,21 @@ func (p *Physics) MoveAndSlide(id int, dx, dy float64, substeps int) {
 	subd := 1.0 / float64(substeps)
 	origShape := p.shapes[id].shape
 	tempShape := p.shapes[id].shape
+	offsetX, offsetY := 0.0, 0.0
 	i := 0
 
+	fmt.Println("move and slide:", id, util.NewVec2(dx, dy).Len())
 	for ; i < substeps; i++ {
-		newTempShape := p.shapes[id].shape.Move(dx*subd, dy*subd)
+		newOffsetX, newOffsetY := offsetX+dx*subd, offsetY+dy*subd
+		newTempShape := p.shapes[id].shape.Move(newOffsetX, newOffsetY)
 		otherObjID, found := p.CheckShapeCollision(bodyObj{
 			id:    id,
 			shape: tempShape,
 		})
 		if !found {
 			tempShape = newTempShape
+			offsetX, offsetY = newOffsetX, newOffsetY
+			fmt.Println("move and slide: ", id, "offset", util.NewVec2(dx*subd, dy*subd).Len())
 		} else {
 			x, y := float64(0), float64(0)
 			switch tempShape := tempShape.(type) {
@@ -160,17 +164,22 @@ func (p *Physics) MoveAndSlide(id int, dx, dy float64, substeps int) {
 			case RectShape:
 				x, y = tempShape.X, tempShape.Y
 			}
+
+			normal := util.Vec2{X: 0, Y: 0}
+
 			switch otherShape := p.shapes[otherObjID].shape.(type) {
 			case CircleShape:
-				// fmt.Println("circle shape")
-				// fmt.Println("circle shape", otherShape)
+				normal = normalToCircle(util.Vec2{X: x, Y: y}, otherShape)
+				fmt.Println("normal to circle", normal)
 			case RectShape:
-				normal := normalToRect(util.Vec2{X: x, Y: y}, otherShape)
-				dot := normal.Dot(util.Vec2{X: dx, Y: dy})
-				dx -= dot * normal.X
-				dy -= dot * normal.Y
+				normal = normalToRect(util.Vec2{X: x, Y: y}, otherShape)
+				fmt.Println("normal to rect")
 			}
-
+			dot := normal.Dot(util.Vec2{X: dx, Y: dy})
+			oldDelta := util.NewVec2(dx, dy)
+			dx -= dot * normal.X
+			dy -= dot * normal.Y
+			fmt.Println("move and slide: id", id, "collide: old dx", oldDelta, "new dx", util.NewVec2(dx, dy))
 		}
 	}
 
@@ -199,18 +208,18 @@ func (p *Physics) CheckShapeCollision(thisObj bodyObj) (int, bool) {
 		case CircleShape:
 			switch s2 := otherShape.(type) {
 			case CircleShape:
-				if isCirclesCollide(s1, s2) {
+				if isCirclesCollideThreshold(s1, s2, 0.01) {
 					return otherObjID, true
 				}
 			case RectShape:
-				if isCircleRectangleCollision(s1, s2) {
+				if isCircleRectangleCollisionThreshold(s1, s2, 0.01) {
 					return otherObjID, true
 				}
 			}
 		case RectShape:
 			switch s2 := otherShape.(type) {
 			case CircleShape:
-				if isCircleRectangleCollision(s2, s1) {
+				if isCircleRectangleCollisionThreshold(s2, s1, 0.01) {
 					return otherObjID, true
 				}
 			}

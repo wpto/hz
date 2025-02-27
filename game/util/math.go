@@ -1,6 +1,9 @@
 package util
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type Vec2 struct {
 	X, Y float64
@@ -63,6 +66,14 @@ func (v Vec2) Values() (float64, float64) {
 
 func (v Vec2) Dot(v2 Vec2) float64 {
 	return v.X*v2.X + v.Y*v2.Y
+}
+
+func (v Vec2) Len() float64 {
+	return math.Sqrt(v.X*v.X + v.Y*v.Y)
+}
+
+func (v Vec2) String() string {
+	return fmt.Sprintf("(%.2f, %.2f)", v.X, v.Y)
 }
 
 // LerpAngle interpolates between two angles a and b by a factor t.

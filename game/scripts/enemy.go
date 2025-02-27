@@ -1,7 +1,6 @@
 package scripts
 
 import (
-	"fmt"
 	"hz/game/core"
 	"hz/game/scripts/physics"
 	"hz/game/util"
@@ -39,7 +38,7 @@ func NewEnemy(p *physics.Physics, pos util.Vec2) *Enemy {
 	}
 
 	// id := p.AddCircle(0, 0, 10, enemy)
-	enemy.id = p.AddShape(physics.CircleShape{X: 0, Y: 0, Radius: 10}, enemy)
+	enemy.id = p.AddShape(physics.CircleShape{X: enemy.x, Y: enemy.y, Radius: 10}, enemy)
 
 	return enemy
 }
@@ -70,7 +69,6 @@ func (e *Enemy) PhysicsUpdate(dt float64) {
 }
 
 func (e *Enemy) Update() {
-	fmt.Println("enemy position", e.x, e.y)
 	e.body.SetPosition(e.x, e.y)
 	e.body.SetRotation(e.lookDirection)
 	e.body.Update()

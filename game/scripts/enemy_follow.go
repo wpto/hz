@@ -29,6 +29,6 @@ func EnemyFollowTarget(p *physics.Physics, dt float64, e *Enemy, target EnemyTar
 
 	e.SetLookDirection(target.Look)
 
-	p.MoveAndCollide(e.id, dx*e.speed*dt, dy*e.speed*dt, 0)
+	p.MoveAndSlide(e.id, dx*e.speed*dt, dy*e.speed*dt, 0)
 	// e.SetPosition(e.x+dx*e.speed*dt, e.y+dy*e.speed*dt)
 }
